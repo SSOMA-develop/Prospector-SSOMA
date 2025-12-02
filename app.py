@@ -35,6 +35,7 @@ st.markdown("""
 
 # Inicializar motor de búsqueda
 if 'engine' not in st.session_state:
+<<<<<<< HEAD
     # Intentar cargar credenciales de st.secrets (Streamlit Cloud) o entorno local
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
@@ -45,11 +46,15 @@ if 'engine' not in st.session_state:
         cse_id = None
 
     st.session_state.engine = SearchEngine(api_key, cse_id)
+=======
+    st.session_state.engine = SearchEngine()
+>>>>>>> 105ed6958f525654b5a1311a68445a8ba75d5c7f
 
 # Sidebar
 with st.sidebar:
     st.title("🔍 Filtros de Búsqueda")
     
+<<<<<<< HEAD
     # Indicador de Estado de API
     if st.session_state.engine.using_real_api:
         st.success("🟢 API Google Conectada")
@@ -60,6 +65,8 @@ with st.sidebar:
         else:
             st.info("Configura GOOGLE_API_KEY y GOOGLE_CSE_ID para datos reales.")
     
+=======
+>>>>>>> 105ed6958f525654b5a1311a68445a8ba75d5c7f
     sector = st.selectbox(
         "Sector Industrial",
         ["Construcción", "Manufactura", "Minería", "Transporte", "Servicios Generales"]
