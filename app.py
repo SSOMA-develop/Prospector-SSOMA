@@ -14,21 +14,50 @@ st.set_page_config(
 # Estilos CSS personalizados
 st.markdown("""
 <style>
-    .main {
-        background-color: #f5f5f5;
+    /* Colores Corporativos SSOMA.PE */
+    :root {
+        --primary-blue: #0060a9; /* Azul del logo */
+        --secondary-green: #28a745; /* Verde (hoja) */
+        --text-black: #000000;
     }
+    
+    .main {
+        background-color: #f8f9fa;
+    }
+    
+    /* Botones */
     .stButton>button {
         width: 100%;
-        border-radius: 5px;
+        border-radius: 8px;
         height: 3em;
-        background-color: #FF4B4B;
+        background-color: var(--primary-blue);
         color: white;
+        border: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
     }
+    .stButton>button:hover {
+        background-color: #004c87;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    /* Tarjetas de Métricas */
     .metric-card {
         background-color: white;
-        padding: 20px;
+        padding: 15px;
         border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border-left: 5px solid var(--secondary-green);
+    }
+    
+    /* Ajustes Responsivos para Móviles */
+    @media (max-width: 768px) {
+        .stButton>button {
+            height: 3.5em; /* Botones más grandes para tocar */
+        }
+        h1 {
+            font-size: 1.8rem !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -48,7 +77,13 @@ if 'engine' not in st.session_state:
 
 # Sidebar
 with st.sidebar:
-    st.title("🔍 Filtros de Búsqueda")
+    # Logo Corporativo
+    try:
+        st.image("assets/logo.png", use_container_width=True)
+    except:
+        st.warning("Logo no encontrado en assets/logo.png")
+
+    st.title("🔍 Filtros")
     
     # Indicador de Estado de API
     if st.session_state.engine.using_real_api:
