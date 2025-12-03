@@ -59,6 +59,23 @@ st.markdown("""
             font-size: 1.8rem !important;
         }
     }
+
+    /* Scrollbars Visibles y Estilizados */
+    ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--primary-blue);
+        border-radius: 6px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #004c87;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,9 +159,13 @@ if 'results' in st.session_state:
     display_df = df[['ruc', 'razon_social', 'segmentacion', 'location', 'role_detected', 'confidence_score']]
     display_df.columns = ['RUC', 'Razón Social', 'Segmentación', 'Ubicación', 'Rol Detectado', 'Confianza']
     
-    st.dataframe(
+    # Tabla Interactiva con Selección
+    event = st.dataframe(
         display_df,
         use_container_width=True,
+        hide_index=True,
+        on_select="rerun",
+        selection_mode="single-row",
         column_config={
             "Confianza": st.column_config.ProgressColumn(
                 "Confianza",
@@ -162,25 +183,42 @@ if 'results' in st.session_state:
     
     with col_left:
         st.subheader("Detalle del Prospecto (CRM)")
-        selected_index = st.selectbox("Seleccionar Empresa:", df.index, format_func=lambda x: df.iloc[x]['nombre_comercial'])
+        
+        selected_index = None
+        
+        # Priorizar selección de la tabla
+        if len(event.selection.rows) > 0:
+            selected_index = event.selection.rows[0]
+        
+        # Fallback a selectbox si no hay selección en tabla (o para permitir cambio manual)
+        # Sincronizamos: si hay selección en tabla, el selectbox debe reflejarlo (si es posible)
+        # Para simplificar, mostramos el detalle directamente si hay selección en tabla
         
         if selected_index is not None:
             prospect = df.iloc[selected_index]
             
             st.markdown(f"""
-            <div style="background-color: white; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0;">
-                <h3 style="color: var(--primary-blue);">🏢 {prospect['nombre_comercial']}</h3>
-                <p><strong>🆔 RUC:</strong> {prospect['ruc'] if prospect['ruc'] else 'No detectado'}</p>
-                <p><strong>📜 Razón Social:</strong> {prospect['razon_social']}</p>
-                <p><strong>🏷️ Segmentación:</strong> <span style="background-color: #e9ecef; padding: 2px 8px; border-radius: 4px;">{prospect['segmentacion']}</span></p>
-                <p><strong>📍 Ubicación:</strong> {prospect['location']}</p>
-                <p><strong>🔗 Fuente:</strong> {prospect['source']}</p>
-                <hr>
+            <div style="background-color: white; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="color: var(--primary-blue); margin-top: 0;">🏢 {prospect['nombre_comercial']}</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <p><strong>🆔 RUC:</strong> {prospect['ruc'] if prospect['ruc'] else 'No detectado'}</p>
+                        <p><strong>📜 Razón Social:</strong> {prospect['razon_social']}</p>
+                        <p><strong>🏷️ Segmentación:</strong> <span style="background-color: #e9ecef; padding: 2px 8px; border-radius: 4px; font-weight: bold;">{prospect['segmentacion']}</span></p>
+                    </div>
+                    <div>
+                        <p><strong>📍 Ubicación:</strong> {prospect['location']}</p>
+                        <p><strong>🔗 Fuente:</strong> <a href="{prospect['source']}" target="_blank">Enlace</a></p>
+                    </div>
+                </div>
+                <hr style="border-top: 1px solid #eee;">
                 <h4 style="color: var(--secondary-green);">👤 Contacto Detectado</h4>
                 <p><strong>Nombre/Rol:</strong> {prospect['role_detected'] if prospect['role_detected'] else 'No detectado'}</p>
                 <p><strong>Email/Contacto:</strong> {prospect['contact_info'] if prospect['contact_info'] else 'No disponible'}</p>
             </div>
             """, unsafe_allow_html=True)
+        else:
+            st.info("👆 Selecciona una empresa en la tabla para ver sus detalles completos.")
             
     with col_right:
         st.subheader("Acciones")
