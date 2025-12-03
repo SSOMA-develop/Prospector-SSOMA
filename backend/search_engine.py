@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class SearchEngine:
-<<<<<<< HEAD
     def __init__(self, api_key: str = None, cse_id: str = None):
         # Configuración de API: Priorizar argumentos, luego variables de entorno
         self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
@@ -18,12 +17,6 @@ class SearchEngine:
         
         if self.api_key and self.cse_id:
             self.using_real_api = True
-=======
-    def __init__(self):
-        # Configuración de API Real
-        self.api_key = os.getenv("GOOGLE_API_KEY")
-        self.cse_id = os.getenv("GOOGLE_CSE_ID")
->>>>>>> 105ed6958f525654b5a1311a68445a8ba75d5c7f
         
         self.mock_companies = [
             "Constructora Los Andes SAC",
