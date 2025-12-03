@@ -138,9 +138,9 @@ if 'results' in st.session_state:
     # Tabla Principal
     st.subheader("Resultados")
     
-    # Formatear el dataframe para mostrar
-    display_df = df[['name', 'location', 'role_detected', 'confidence_score', 'source']]
-    display_df.columns = ['Empresa', 'Ubicación', 'Rol Detectado', 'Confianza', 'Fuente']
+    # Formatear el dataframe para mostrar (Modelo CRM)
+    display_df = df[['ruc', 'razon_social', 'segmentacion', 'location', 'role_detected', 'confidence_score']]
+    display_df.columns = ['RUC', 'Razón Social', 'Segmentación', 'Ubicación', 'Rol Detectado', 'Confianza']
     
     st.dataframe(
         display_df,
@@ -153,6 +153,7 @@ if 'results' in st.session_state:
                 min_value=0,
                 max_value=1,
             ),
+            "RUC": st.column_config.TextColumn("RUC", help="Registro Único de Contribuyentes"),
         }
     )
     
@@ -160,19 +161,22 @@ if 'results' in st.session_state:
     col_left, col_right = st.columns([2, 1])
     
     with col_left:
-        st.subheader("Detalle del Prospecto")
-        selected_index = st.selectbox("Seleccionar Empresa para ver detalles:", df.index, format_func=lambda x: df.iloc[x]['name'])
+        st.subheader("Detalle del Prospecto (CRM)")
+        selected_index = st.selectbox("Seleccionar Empresa:", df.index, format_func=lambda x: df.iloc[x]['nombre_comercial'])
         
         if selected_index is not None:
             prospect = df.iloc[selected_index]
             
             st.markdown(f"""
             <div style="background-color: white; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0;">
-                <h3>🏢 {prospect['name']}</h3>
+                <h3 style="color: var(--primary-blue);">🏢 {prospect['nombre_comercial']}</h3>
+                <p><strong>🆔 RUC:</strong> {prospect['ruc'] if prospect['ruc'] else 'No detectado'}</p>
+                <p><strong>📜 Razón Social:</strong> {prospect['razon_social']}</p>
+                <p><strong>🏷️ Segmentación:</strong> <span style="background-color: #e9ecef; padding: 2px 8px; border-radius: 4px;">{prospect['segmentacion']}</span></p>
                 <p><strong>📍 Ubicación:</strong> {prospect['location']}</p>
                 <p><strong>🔗 Fuente:</strong> {prospect['source']}</p>
                 <hr>
-                <h4>👤 Contacto Detectado</h4>
+                <h4 style="color: var(--secondary-green);">👤 Contacto Detectado</h4>
                 <p><strong>Nombre/Rol:</strong> {prospect['role_detected'] if prospect['role_detected'] else 'No detectado'}</p>
                 <p><strong>Email/Contacto:</strong> {prospect['contact_info'] if prospect['contact_info'] else 'No disponible'}</p>
             </div>

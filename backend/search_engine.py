@@ -75,18 +75,30 @@ class SearchEngine:
             items = res.get("items", [])
             
             for item in items:
-                prospect = {
-                    "name": item.get("title"),
-                    "source": item.get("displayLink"),
-                    "location": location, # Google no siempre da ubicación estructurada
-                    "contact_info": None,
-                    "role_detected": None,
-                    "confidence_score": 0.8 # Base confidence para real data
-                }
-                
+                title = item.get("title", "")
                 snippet = item.get("snippet", "").lower()
                 
-                # Intentar extraer info del snippet
+                # Mapeo a Modelo CRM
+                prospect = {
+                    "ruc": None, # Dificil de obtener solo con Google Search, se intentará buscar en snippet
+                    "razon_social": title, # Asumimos que el título es la Razón Social o Nombre Comercial
+                    "nombre_comercial": title,
+                    "segmentacion": "Por Clasificar", # MYPE, PYME, Corporativo
+                    "location": location,
+                    "source": item.get("displayLink"),
+                    "contact_info": None,
+                    "role_detected": None,
+                    "confidence_score": 0.8
+                }
+                
+                # Intentar extraer RUC (11 dígitos) del snippet
+                import re
+                ruc_match = re.search(r'\b(10|20)\d{9}\b', snippet)
+                if ruc_match:
+                    prospect["ruc"] = ruc_match.group(0)
+                    prospect["confidence_score"] += 0.1 # Mayor confianza si encontramos RUC
+                
+                # Intentar extraer info de contacto
                 if "@" in snippet:
                     words = snippet.split()
                     for word in words:
@@ -97,7 +109,7 @@ class SearchEngine:
                 for role in self.decision_roles:
                     if role.lower() in snippet:
                         prospect["role_detected"] = role
-                        prospect["confidence_score"] = 0.95
+                        prospect["confidence_score"] = min(0.99, prospect["confidence_score"] + 0.15)
                         break
                 
                 results.append(prospect)
@@ -112,49 +124,50 @@ class SearchEngine:
 
     def _search_mock(self, sector: str, location: str, deep_search: bool) -> List[Dict]:
         """
-        Simula una búsqueda avanzada (Mock Data).
+        Simula una búsqueda avanzada (Mock Data) con estructura CRM.
         """
         results = []
-        # Aumentamos la cantidad de resultados para dar sensación de "Deep Search"
         num_results = random.randint(8, 15) if not deep_search else random.randint(12, 20)
         
         for _ in range(num_results):
             base_name = random.choice(self.mock_companies)
-            # Variar el nombre para que no sean siempre iguales
             suffix = random.choice(["", " & Asociados", " Group", " Perú"])
-            company = f"{base_name}{suffix}"
+            company_name = f"{base_name}{suffix}"
             
-            # Generar datos base
+            # Simular RUC
+            ruc = f"20{random.randint(100000000, 999999999)}"
+            
+            # Simular Segmentación basada en "tamaño" aleatorio
+            segmento = random.choice(["Unidad I (MYPE)", "Unidad II (PYME)", "Unidad III (Corporativo)"])
+            
             prospect = {
-                "name": company,
-                "source": random.choice(["DatosPerú", "LinkedIn", "UniversidadPerú", "Paginas Amarillas"]),
+                "ruc": ruc,
+                "razon_social": f"{company_name} S.A.C.",
+                "nombre_comercial": company_name,
+                "segmentacion": segmento,
                 "location": f"{location} - {random.choice(['Zona Industrial', 'Cercado', 'Parque Industrial'])}",
+                "source": random.choice(["DatosPerú", "LinkedIn", "UniversidadPerú", "Paginas Amarillas"]),
                 "contact_info": None,
                 "role_detected": None,
                 "confidence_score": round(random.uniform(0.4, 0.7), 2)
             }
 
-            # Lógica Deep Search: Intentar encontrar al tomador de decisiones
+            # Lógica Deep Search
             if deep_search:
-                # Mayor probabilidad de éxito en Deep Search
                 if random.random() > 0.2: 
                     role = random.choice(self.decision_roles)
                     prospect["role_detected"] = role
                     
-                    # Generar email corporativo realista
-                    domain = company.lower().replace(' ', '').replace('sac', '').replace('&', '').replace('group', '').replace('perú', '')
+                    domain = company_name.lower().replace(' ', '').replace('sac', '').replace('&', '').replace('group', '').replace('perú', '')
                     prospect["contact_info"] = f"{random.choice(['gerencia', 'contacto', 'admin'])}@{domain}.com"
                     
-                    # A veces agregar teléfono
                     if random.random() > 0.5:
                         prospect["contact_info"] += f" | 📞 9{random.randint(10,99)} {random.randint(100,999)} {random.randint(100,999)}"
                     
-                    # Subir confianza si encontramos rol clave
                     prospect["confidence_score"] = round(random.uniform(0.85, 0.99), 2)
                     prospect["source"] += " + Web Scraping"
             
             results.append(prospect)
             
-        # Ordenar por confianza descendente
         results.sort(key=lambda x: x['confidence_score'], reverse=True)
         return results
